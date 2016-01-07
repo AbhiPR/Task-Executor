@@ -1,84 +1,90 @@
 package com.project.taskexecutor;
 
-import java.util.Random;
-
 public class BlockingTaskQueue {
 
-	public static Task[] bQueue = new Task[100];
-	public static int front = -1;
-	public static int rear = -1;
-	public static int p = 0;
-	static Object lock1 = new Object();
-//static Object lock2 = new Object();
-	static Random rnd = new Random();
+	public Task[] bQueue;
+	public int front;
+	public int rear;
+	public int num;
+	public int capacity;
 
-	public static boolean isEmpty() {
+	Object full;
+	Object empty;
+
+	public BlockingTaskQueue() {
+		bQueue = new Task[100];
+		num = 1;
+		front = -1;
+		rear = -1;
+		full = new Object();
+		empty = new Object();
+	}
+
+	public boolean isEmpty() {
 
 		return (front == -1 && rear == -1);
 	}
 
-	public static boolean isFull() {
+	public boolean isFull() {
 		return ((rear + 1) % 100 == front);
 	}
 
-	public static void add(Task i) {
-		synchronized (lock1) {
-			while (isFull()) {
+	public void add(Task i) {
+
+		if (isFull()) {
+			synchronized (full) {
 				try {
-					lock1.wait();
+					full.wait();
 				} catch (InterruptedException e) {
 
 					e.printStackTrace();
 				}
 			}
-		} // } catch (InterruptedException e) {}}
-		synchronized (lock1) {
+		}
+		synchronized (this) {
 
 			if (isEmpty()) {
 				front = 0;
 				rear = 0;
-				bQueue[rear] = i;
-			} else {
+			} else
 				rear = (rear + 1) % 100;
-				bQueue[rear] = i;
 
+			bQueue[rear] = i;
+
+			synchronized (empty) {
+				if (isFull())
+					empty.notify();
 			}
-			lock1.notify();
 
 		}
 
 	}
 
-	public static Task remove() {
+	public Task remove() {
 
-		synchronized (lock1) {
-			while (isEmpty()) {
+		if (isEmpty()) {
+			synchronized (empty) {
 				try {
-					lock1.wait();
+					empty.wait();
 				} catch (InterruptedException e) {
 				}
 			}
 		}
+		synchronized (this) {
 
-		Task ele;
-		synchronized (lock1) {
-			if (p <= rnd.nextInt(30)) {
-				p = 0;
-				lock1.notify();
-			}
+			Task ele;
+
 			ele = bQueue[front];
-
-			if (front == rear) {
-				front = -1;
-				rear = -1;
-				lock1.notify();
-
-			} else
+			if (front == rear)
+				front = rear = -1;
+			else
 				front = (front + 1) % 100;
-			p++;
+
+			synchronized (full) {
+				full.notify();
+			}
+			return ele;
 
 		}
-		return ele;
 	}
-
 }

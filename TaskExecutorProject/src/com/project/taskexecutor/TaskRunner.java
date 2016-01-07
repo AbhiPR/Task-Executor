@@ -2,14 +2,18 @@ package com.project.taskexecutor;
 
 public class TaskRunner implements Runnable {
 
-	public BlockingTaskQueue q;
+	BlockingTaskQueue queue;
+
+	public TaskRunner(BlockingTaskQueue o) {
+		queue = o;
+	}
 
 	public void run() {
 		while (true) {
 
 			Task newTask = null;
 
-			newTask = BlockingTaskQueue.remove();
+			newTask = queue.remove();
 
 			try {
 

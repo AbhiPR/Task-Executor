@@ -1,21 +1,22 @@
 package com.project.taskexecutor;
 
-public class TaskExecutorImpl {
+public class TaskExecutorImpl{
 
-	int threads;
+	BlockingTaskQueue obj;
 
-	TaskExecutorImpl(int size) {
-
-		TaskRunner s = new TaskRunner();
+	    TaskExecutorImpl(int size) {
+        obj= new BlockingTaskQueue();
+		TaskRunner s=new TaskRunner(obj);
 		for (int j = 0; j < size; j++) {
-			Thread t = new Thread(s);
+			
+			Thread t=new Thread(s);
 			t.start();
 		}
 	}
 
 	public void addTask(Task task) {
-
-		BlockingTaskQueue.add(task);
-
+		
+			obj.add(task);
+		
 	}
 }
